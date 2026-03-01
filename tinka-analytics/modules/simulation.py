@@ -88,3 +88,83 @@ def run_simulation(user_numbers, n_simulations=10000):
     roi_percent = ((total_revenue - total_cost) / total_cost) * 100
     
     return hit_counts, roi_percent, unique_matches, total_revenue
+
+def get_kelly_criterion(win_prob, payout_ratio):
+    """
+    Calculates Kelly Criterion optimal bet size.
+    f* = (bp - q) / b
+    where:
+    b = decimal odds - 1 (payout multiplier)
+    p = probability of winning
+    q = probability of losing (1 - p)
+    """
+    q = 1 - win_prob
+    b = payout_ratio
+    
+    if b <= 0:
+        return 0
+        
+    f_star = (b * win_prob - q) / b
+    return max(0, f_star) # No shorting the lottery
+
+def simulate_capital_growth(initial_capital, n_steps, win_prob, payout_ratio, strategy='kelly'):
+    """
+    Simulates capital growth over n steps using Kelly or Fixed betting.
+    """
+    capital = [initial_capital]
+    f_star = get_kelly_criterion(win_prob, payout_ratio)
+    
+    for _ in range(n_steps):
+        current_cap = capital[-1]
+        
+        if strategy == 'kelly':
+            bet_size = current_cap * f_star
+        elif strategy == 'fixed':
+            bet_size = current_cap * 0.05 # 5% fixed
+        else:
+            bet_size = 5 # Fixed $5
+            
+        # Hard stop if ruin
+        if current_cap <= 0:
+            capital.append(0)
+            continue
+            
+        win = np.random.random() < win_prob
+        
+        if win:
+            new_cap = current_cap + (bet_size * payout_ratio)
+        else:
+            new_cap = current_cap - bet_size
+            
+        capital.append(new_cap)
+        
+    return capital
+
+def run_ab_test_simulator(freq_df, n_future_draws=500):
+    """
+    Returns A/B test sequence comparing picking top 6 hot numbers vs random picks.
+    """
+    top_6 = freq_df.sort_values(by='Frecuencia', ascending=False).head(6)['Numero'].astype(int).values
+    
+    hot_hits = []
+    random_hits = []
+    
+    # Vectorized future draws
+    random_matrix = np.random.rand(n_future_draws, 50)
+    future_draws = np.argsort(random_matrix, axis=1)[:, :6] + 1
+    
+    for draw in future_draws:
+        # A strategy: Top 6 Hot Numbers
+        hits_a = len(np.intersect1d(draw, top_6))
+        hot_hits.append(hits_a)
+        
+        # B strategy: Fully Random Pick
+        random_pick = np.random.choice(range(1, 51), 6, replace=False)
+        hits_b = len(np.intersect1d(draw, random_pick))
+        random_hits.append(hits_b)
+        
+    return pd.DataFrame({
+        'Draw': range(1, n_future_draws + 1),
+        'Hot_Strategy_Hits': hot_hits,
+        'Random_Strategy_Hits': random_hits
+    })

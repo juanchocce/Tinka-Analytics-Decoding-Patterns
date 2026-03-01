@@ -28,7 +28,7 @@ Bienvenido. Esta aplicación no es un simple generador de números aleatorios. E
 
 #### Módulos de la Aplicación:
 1.  **📊 Dashboard Científico**: Visualiza patrones ocultos, análisis de gaps y entropía del sistema.
-2.  **🧪 Monte Carlo Playground**: Pon a prueba tu "Jugada Maestra" contra 10,000 sorteos simulados en tiempo real.
+2.  **🧪 Playground**: Pon a prueba tu "Jugada Maestra" contra 10,000 sorteos simulados en tiempo real.
 3.  **📝 Conclusiones Éticas**: Interpretación honesta sobre las limitaciones del modelado predictivo en juegos de azar independientes.
 
 ---
